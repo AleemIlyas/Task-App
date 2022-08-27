@@ -10,12 +10,12 @@ routes.post('/users', async (req,res)=>{
 
     try{
     const user=new User(req.body)
-    const token= await user.createToken()
+    const {token,expiresIn}= await user.createToken()
     await user.save()
-        res.status(201).send({user,token})
+        res.status(201).send(user,token,expiresIn)
     } 
     catch(e){
-        res.status(500).send(e)
+        res.status(400).send({error:e.message})
     }
 
 })
@@ -23,11 +23,11 @@ routes.post('/users', async (req,res)=>{
 routes.post('/users/login',async (req,res)=>{
     try{
         const user= await User.findByCredentials(req.body.email,req.body.password)
-        const token= await user.createToken()
-        res.send({user,token})
+        const {token,expiresIn}= await user.createToken()
+        res.send({user,token, expiresIn })
     }
     catch(e){
-        res.status(400).send(e)
+        res.status(400).send({error:e.message})
     }
 })
 

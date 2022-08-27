@@ -39,6 +39,10 @@ const userSchema = mongooes.Schema({
         token:{
         type:'string',
         required:true
+    },
+    expiresIn:{
+        type:'number',
+        required:true
     }
     }],
     avatar:{
@@ -57,9 +61,9 @@ userSchema.virtual('tasks',{
 userSchema.statics.findByCredentials = async function(email,password){
   
     const user = await User.findOne({email:email})
-    if(!user) throw new Error({error:'User not found'})
+    if(!user) throw new Error('Invalid Username or Password')
     const isValid= await bcrypt.compare(password,user.password)
-    if(!isValid) new Error({error: 'User not found'})
+    if(!isValid) new Error('Invalid Username or Password')
     return user
 }
 
@@ -77,9 +81,10 @@ userSchema.methods.toJSON = function(){
 userSchema.methods.createToken= async function(){
     const user=this
     const token = jwt.sign({ _id: user._id.toString()}, process.env.JWT_SECERT , {expiresIn:'2h'});
-    user.tokens = user.tokens.concat({token})
+    const expiresIn= parseInt(process.env.EXPIRE_TIME)
+    user.tokens = user.tokens.concat({token,expiresIn})
     await user.save()
-    return token 
+    return {token,expiresIn} 
 
 }
 
@@ -101,6 +106,14 @@ userSchema.pre('remove',async function(next){
     await Task.deleteMany({owner:user._id})
     next()
 })
+
+userSchema.post('save', function(error, doc, next) {
+    if (error.name === 'MongoServerError' && error.code === 11000) {
+      next(new Error('email must be unique'));
+    } else {
+      next(error);
+    }
+  });
 
 const User = mongooes.model('User',userSchema)
 
