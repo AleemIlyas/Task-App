@@ -44,7 +44,11 @@ const userSchema = mongooes.Schema({
         type:'number',
         required:true
     }
-    }],
+    }
+    // ,{
+    //     "expireAt":{ type: Date , expired : process.env.EXPIRE_TIME }
+    // }
+],
     avatar:{
         type: "Buffer"
     }
@@ -63,7 +67,7 @@ userSchema.statics.findByCredentials = async function(email,password){
     const user = await User.findOne({email:email})
     if(!user) throw new Error('Invalid Username or Password')
     const isValid= await bcrypt.compare(password,user.password)
-    if(!isValid) new Error('Invalid Username or Password')
+    if(!isValid) throw new Error('Invalid Username or Password')
     return user
 }
 
@@ -80,7 +84,7 @@ userSchema.methods.toJSON = function(){
 
 userSchema.methods.createToken= async function(){
     const user=this
-    const token = jwt.sign({ _id: user._id.toString()}, process.env.JWT_SECERT , {expiresIn:'2h'});
+    const token = jwt.sign({ _id: user._id.toString()}, process.env.JWT_SECERT , {expiresIn:'24h'});
     const expiresIn= parseInt(process.env.EXPIRE_TIME)
     user.tokens = user.tokens.concat({token,expiresIn})
     await user.save()

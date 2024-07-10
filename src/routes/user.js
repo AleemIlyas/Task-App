@@ -135,6 +135,7 @@ routes.post('/users/me/avatar', auth,upload.single('avatar'),async function(req,
     await req.user.save()
     res.send()
 },(error,req,res,next)=>{
+    console.log(error)
     res.status(400).send({error:error.message})
 })
 

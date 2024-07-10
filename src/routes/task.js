@@ -52,7 +52,7 @@ routes.get('/task', auth , async (req, res)=>{
         res.send(req.user.tasks)
     }
     catch(error){
-        res.status(500).send(error)
+        res.status(500).send(error.message)
     }
 })
 
